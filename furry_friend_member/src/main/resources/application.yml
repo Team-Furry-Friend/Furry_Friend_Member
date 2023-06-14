@@ -1,0 +1,4 @@
+spring:
+  config:
+    import:
+      - classpath:Furry-Friend-Security/furry_friend_member/application.yml
