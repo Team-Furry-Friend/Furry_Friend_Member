@@ -1,7 +1,5 @@
 package com.v3.furry_friend_member.config;
 
-import java.util.Arrays;
-
 import javax.sql.DataSource;
 
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -21,9 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.v3.furry_friend_member.repository.MemberRepository;
@@ -42,7 +37,9 @@ import lombok.extern.log4j.Log4j2;
 @Configuration
 @Log4j2
 @RequiredArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+// 특정 주소 접근시 권한 및 인증을 위한 어노테이션 활성화
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
+// 필터 체인 관리 시작 어노테이션
 @EnableWebSecurity
 public class CustomSecurityConfig {
 
@@ -58,26 +55,6 @@ public class CustomSecurityConfig {
         JdbcTokenRepositoryImpl repo = new JdbcTokenRepositoryImpl();
         repo.setDataSource(dataSource);
         return repo;
-    }
-
-    // CORS 설정을 위한 Bean을 생성
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource(){
-
-        CorsConfiguration configuration = new CorsConfiguration();
-        // 모든 요청에 설정
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        // 메서드 설정
-        configuration.setAllowedMethods(Arrays.asList(
-            "HEAD", "GET", "POST", "PUT", "DELETE", "PATCH"));
-        // 헤더 설정
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", "Cache-Control", "Content-Type"));
-        //인증 설정
-        configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
     }
 
     @Bean
@@ -141,16 +118,14 @@ public class CustomSecurityConfig {
 
         // 소셜 로그인 처리를 위한 설정
         http.oauth2Login().loginPage("/member/login").successHandler(customSocialLoginSuccessHandler()); // 소셜 로그인 성공 후 처리를 담당하는 핸들러
-        http.formLogin().loginPage("/member/login").successHandler(customSocialLoginSuccessHandler());
+        http.formLogin().loginProcessingUrl("/member/login").successHandler(customSocialLoginSuccessHandler());
 
         // 로그아웃
         http.logout().disable();
 
         http.csrf().disable();
 
-        http.cors(httpSecurityCorsConfigurer -> {
-            httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource());
-        });
+        http.authorizeRequests().anyRequest().permitAll();
 
         http.rememberMe().key("12345678").tokenRepository(persistentTokenRepository())
                 .userDetailsService(customUserDetailService).tokenValiditySeconds(60*60*24*30);

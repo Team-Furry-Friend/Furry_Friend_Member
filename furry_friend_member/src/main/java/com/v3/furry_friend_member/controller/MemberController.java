@@ -2,10 +2,12 @@ package com.v3.furry_friend_member.controller;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.v3.furry_friend_member.common.ApiResponse;
@@ -18,6 +20,7 @@ import lombok.extern.log4j.Log4j2;
 @RestController
 @Log4j2
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*", methods = {RequestMethod.POST})
 @RequestMapping("/member")
 //member와 관련된 요청을 처리할 메서드
 public class MemberController {
@@ -26,7 +29,7 @@ public class MemberController {
 
     //회원 가입 처리
     @PostMapping("/join")
-    public ApiResponse join(MemberJoinDTO memberJoinDTO){
+    public ApiResponse join(@RequestBody MemberJoinDTO memberJoinDTO){
 
         log.info(memberJoinDTO);
         try{

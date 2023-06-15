@@ -10,5 +10,8 @@
         <module name="furry_friend_member.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="furry_friend_member" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>
