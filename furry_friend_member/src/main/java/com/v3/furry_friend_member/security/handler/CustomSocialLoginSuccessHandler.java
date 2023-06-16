@@ -3,7 +3,6 @@ package com.v3.furry_friend_member.security.handler;
 import java.io.IOException;
 
 import javax.crypto.SecretKey;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -18,7 +17,6 @@ import com.v3.furry_friend_member.entity.Token;
 import com.v3.furry_friend_member.repository.MemberRepository;
 import com.v3.furry_friend_member.repository.TokenRepository;
 import com.v3.furry_friend_member.security.util.JwtUtil;
-import com.v3.furry_friend_member.service.dto.SuccessResponse;
 
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -66,8 +64,8 @@ public class CustomSocialLoginSuccessHandler implements AuthenticationSuccessHan
         // RefreshToken 유효기간 7일
         String refreshToken = jwtUtil.generateToken(7 * 24 * 60, member.getMid());
 
-        log.warn("accessToken" + accessToken);
-        log.warn("refreshToken" + refreshToken);
+        log.info("accessToken: " + accessToken);
+        log.info("refreshToken: " + refreshToken);
 
         // Member 엔티티에 RefreshToken 값을 저장합니다.
         Token token = Token.builder()
@@ -77,12 +75,6 @@ public class CustomSocialLoginSuccessHandler implements AuthenticationSuccessHan
             .build();
 
         tokenRepository.save(token);
-
-        // 엑세스 토큰을 쿠키에 저장
-        Cookie accessTokenCookie = new Cookie("access_token", accessToken);
-        accessTokenCookie.setMaxAge(7*24*60); // 쿠키의 만료 시간 설정
-        accessTokenCookie.setPath("/"); // 쿠키의 유효 경로 설정 (옵션)
-        response.addCookie(accessTokenCookie);
 
         // 로그인 성공 메시지
         ApiResponse<String> apiResponse = ApiResponse.success("success", accessToken);

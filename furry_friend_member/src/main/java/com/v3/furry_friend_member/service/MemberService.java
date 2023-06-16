@@ -46,32 +46,32 @@ public class MemberService {
     }
 
     //회원가입
-    public void join(MemberJoinDTO memberJoinDTO) throws MidExistException {
+    public void join(MemberJoinDTO memberJoinDTO) throws Exception{
         //이메일 중복 확인
         String email = memberJoinDTO.getEmail();
 
         boolean exist = memberRepository.existsByEmail(email);
-        if(exist){
-            throw new MidExistException();
+        if(!exist){
+            //회원 가입을 위해서 입력 받은 정보를 가지고 Member Entity를 생성
+            Member member = Member.builder()
+                .mpw(memberJoinDTO.getMpw())
+                .email(memberJoinDTO.getEmail())
+                .name(memberJoinDTO.getName())
+                .address(memberJoinDTO.getAddress())
+                .phone(memberJoinDTO.getPhone())
+                .del(memberJoinDTO.isDel())
+                .social(memberJoinDTO.isSocial())
+                .build();
+
+            //비밀번호 암호화
+            member.changePassword(passwordEncoder.encode(memberJoinDTO.getMpw()));
+            //권한 설정
+            member.addRole(MemberRole.USER);
+
+            memberRepository.save(member);
+        }else{
+            throw new Exception("중복된 이메일입니다.");
         }
-
-        //회원 가입을 위해서 입력 받은 정보를 가지고 Member Entity를 생성
-        Member member = Member.builder()
-            .mpw(memberJoinDTO.getMpw())
-            .email(memberJoinDTO.getEmail())
-            .name(memberJoinDTO.getName())
-            .address(memberJoinDTO.getAddress())
-            .phone(memberJoinDTO.getPhone())
-            .del(memberJoinDTO.isDel())
-            .social(memberJoinDTO.isSocial())
-            .build();
-
-        //비밀번호 암호화
-        member.changePassword(passwordEncoder.encode(memberJoinDTO.getMpw()));
-        //권한 설정
-        member.addRole(MemberRole.USER);
-
-        memberRepository.save(member);
     }
 
     // 토큰의 유효성 검사 및 member 고유 번호 찾아오는 메서드
@@ -103,12 +103,7 @@ public class MemberService {
     }
 
     // 로그아웃(DB 토큰 및 쿠키 토큰 삭제)
-    public void logout(HttpServletResponse response, String access_token){
+    public void logout(String access_token){
         tokenRepository.deleteTokenByUserId(getMemberId(access_token));
-
-        Cookie cookieToDelete = new Cookie("access_token", null);
-        cookieToDelete.setMaxAge(0);
-        cookieToDelete.setPath("/");
-        response.addCookie(cookieToDelete);
     }
 }
