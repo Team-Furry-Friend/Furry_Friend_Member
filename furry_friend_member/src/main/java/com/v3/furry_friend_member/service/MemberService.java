@@ -5,14 +5,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
 import com.v3.furry_friend_member.service.dto.MemberJoinDTO;
 import com.v3.furry_friend_member.entity.Member;
 import com.v3.furry_friend_member.entity.MemberRole;
 import com.v3.furry_friend_member.repository.MemberRepository;
 import com.v3.furry_friend_member.repository.TokenRepository;
+import com.v3.furry_friend_member.service.dto.MemberSecurityDTO;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -105,5 +103,12 @@ public class MemberService {
     // 로그아웃(DB 토큰 및 쿠키 토큰 삭제)
     public void logout(String access_token){
         tokenRepository.deleteTokenByUserId(getMemberId(access_token));
+    }
+
+    // 사용자 찾기
+    public String getMemberName(Long mid){
+        Member member = memberRepository.findByMid(mid);
+
+        return member.getName();
     }
 }

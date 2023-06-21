@@ -1,8 +1,10 @@
 package com.v3.furry_friend_member.controller;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.v3.furry_friend_member.common.ApiResponse;
@@ -52,5 +54,19 @@ public class MemberController {
             log.error("토큰이 존재하지 않습니다.", e);
             return ApiResponse.fail(400, "로그아웃 실패");
         }
+    }
+
+    // 상품 작성자의 이름을 불러오는 메서드
+    @GetMapping("/name")
+    public ApiResponse<String> getName(@RequestParam("mid") Long mid){
+
+        try {
+            String name = memberService.getMemberName(mid);
+            return ApiResponse.success("작성자 이름 호출 성공", name);
+        }catch (Exception e){
+            log.info(e.getMessage());
+            return ApiResponse.fail(500, "작성자 이름 호출 실패 : " + e.getMessage());
+        }
+
     }
 }
