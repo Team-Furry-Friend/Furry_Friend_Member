@@ -28,7 +28,6 @@ public class MemberController {
     @PostMapping("/join")
     public ApiResponse join(@RequestBody MemberJoinDTO memberJoinDTO){
 
-        log.info("memberJoinDTO : " + memberJoinDTO);
         try{
 
             // 성공
@@ -37,7 +36,7 @@ public class MemberController {
         } catch (Exception e) {
             
             // 실패
-            log.error("회원가입 실패: " + e.getMessage());
+            log.error("회원가입 실패: " + e.getMessage(), e);
             return ApiResponse.fail(400, "회원가입 실패");
         }
     }
@@ -47,11 +46,9 @@ public class MemberController {
     public ApiResponse logout(@RequestBody JwtRequest jwtRequest){
         try{
             memberService.logout(jwtRequest.getAccess_token());
-
             return ApiResponse.success("로그아웃 성공");
         } catch(IllegalArgumentException e){
-
-            log.error("토큰이 존재하지 않습니다.", e);
+            log.error("토큰이 존재하지 않습니다." + e.getMessage(), e);
             return ApiResponse.fail(400, "로그아웃 실패");
         }
     }
@@ -64,9 +61,8 @@ public class MemberController {
             String name = memberService.getMemberName(mid);
             return ApiResponse.success("작성자 이름 호출 성공", name);
         }catch (Exception e){
-            log.info(e.getMessage());
+            log.info("작성자 이름 호출 실패 : " + e.getMessage(), e);
             return ApiResponse.fail(500, "작성자 이름 호출 실패 : " + e.getMessage());
         }
-
     }
 }
