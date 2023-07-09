@@ -26,9 +26,9 @@ public class MemberSecurityDTO extends User implements OAuth2User {
 
 
     public MemberSecurityDTO(String password, String username, String name, String address, String phone,
-                             boolean del, boolean social, Collection<? extends GrantedAuthority> authorities) {
+        boolean del, boolean social, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);
-        
+
         this.mpw = password;
         this.email = username;
         this.name = name;
