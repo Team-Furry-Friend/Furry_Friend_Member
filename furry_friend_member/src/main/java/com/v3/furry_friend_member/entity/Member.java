@@ -42,7 +42,7 @@ public class Member extends BaseEntity {
     private boolean del;
 
     //로그인 정보
-    private boolean social;
+    private String social;
 
     //권한 -여러 개의 권한을 소유
     @ElementCollection(fetch = FetchType.LAZY)

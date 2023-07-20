@@ -31,7 +31,7 @@ public class MemberService {
     private final TokenService tokenService;
 
     //회원가입
-    public void join(MemberJoinDTO memberJoinDTO) throws Exception{
+    public void join(MemberJoinDTO memberJoinDTO) {
 
         // 이메일 및 닉네임 중복확인
         validateSignUpInfo(memberJoinDTO);
@@ -43,7 +43,7 @@ public class MemberService {
             .address(memberJoinDTO.getAddress())
             .phone(memberJoinDTO.getPhone())
             .del(memberJoinDTO.isDel())
-            .social(memberJoinDTO.isSocial())
+            .social("LOCAL")
             .build();
 
         //비밀번호 암호화
@@ -75,16 +75,21 @@ public class MemberService {
             .name(member.get().getName())
             .build();
 
+        // 비밀번호 검증
         validatePassword(memberLoginRequestDTO, member.get());
 
+        // 로컬 로그인
+        if(member.get().getSocial().equals("LOCAL")){
+            String accessToken = tokenService.createAccessToken(memberJoinDTO);
+            String refreshToken = tokenService.createRefreshToken(memberJoinDTO);
 
-        String accessToken = tokenService.createAccessToken(memberJoinDTO);
-        String refreshToken = tokenService.createRefreshToken(memberJoinDTO);
+            // 기존의 토큰이 있다면 재발급, 없다면 생성
+            tokenService.saveToken(accessToken, refreshToken);
 
-        // 기존의 토큰이 있다면 재발급, 없다면 생성
-        tokenService.saveToken(accessToken, refreshToken);
-
-        return new MemberLoginResponseDTO(accessToken, refreshToken);
+            return new MemberLoginResponseDTO(accessToken, refreshToken);
+        }else{
+            throw new RuntimeException(member.get().getSocial() + "으로 로그인한 회원입니다.");
+        }
     }
 
     // 비밀번호 검증

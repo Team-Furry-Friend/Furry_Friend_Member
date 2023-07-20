@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.v3.furry_friend_member.filter.JwtAuthenticationFilter;
 import com.v3.furry_friend_member.handler.CustomAccessDeniedHandler;
 import com.v3.furry_friend_member.handler.CustomAuthenticationEntryPoint;
+import com.v3.furry_friend_member.repository.MemberRepository;
 import com.v3.furry_friend_member.service.CustomUserDetailsService;
 import com.v3.furry_friend_member.service.TokenService;
 
@@ -25,16 +26,12 @@ public class CustomSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final TokenService tokenService;
+    private final MemberRepository memberRepository;
 
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    // 소셜 로그인 성공 후 처리를 위한 핸들러
-    // private CustomSocialLoginSuccessHandler customSocialLoginSuccessHandler() {
-    //     return new CustomSocialLoginSuccessHandler(passwordEncoder(), jwtUtil, memberRepository, tokenRepository);
-    // }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception{
@@ -45,17 +42,13 @@ public class CustomSecurityConfig extends WebSecurityConfigurerAdapter {
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // session 사용 x
             .and()
-            // .oauth2Login()
-            // .loginPage("/member/login")
-            // .successHandler(customSocialLoginSuccessHandler())
-            // .and()
             .authorizeRequests()
                 .anyRequest().permitAll()
             .and()
                 .exceptionHandling().accessDeniedHandler(new CustomAccessDeniedHandler())
             .and()
                 .exceptionHandling().authenticationEntryPoint(new CustomAuthenticationEntryPoint())
-            .and() // 7
+            .and()
                 .addFilterBefore(new JwtAuthenticationFilter(tokenService, customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
     }
 

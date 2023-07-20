@@ -16,6 +16,6 @@ public class MemberJoinDTO {
     private String name;
     private String address;
     private String phone;
+    private String social;
     private boolean del;
-    private boolean social;
 }
