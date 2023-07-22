@@ -3,7 +3,6 @@ package com.v3.furry_friend_member.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,7 +16,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,6 +25,7 @@ import com.v3.furry_friend_member.entity.MemberRole;
 import com.v3.furry_friend_member.repository.MemberRepository;
 import com.v3.furry_friend_member.service.dto.MemberJoinDTO;
 import com.v3.furry_friend_member.service.dto.MemberLoginResponseDTO;
+import com.v3.furry_friend_member.service.dto.MemberResponseDTO;
 import com.v3.furry_friend_member.service.dto.SocialTokenResponseDTO;
 import com.v3.furry_friend_member.util.ConfigUtils;
 
@@ -90,13 +89,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
 
     //회원가입하고 토큰을 리턴하는 메서드
-    private MemberLoginResponseDTO generateDTO(String email, String name, String social, String mobile){
+    private MemberResponseDTO generateDTO(String email, String name, String social, String mobile){
 
         //email을 가지고 데이터 찾아오기
         Optional<Member> result = memberRepository.findByEmail(email);
+        Member member;
         if(result.isEmpty()){
             //email이 존재하지 않는 경우로 회원 가입
-            Member member = Member.builder()
+            member = Member.builder()
                 .mpw(passwordEncoder.encode("1111"))
                 .email(email)
                 .name(name)
@@ -107,43 +107,30 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             member.addRole(MemberRole.USER);
             memberRepository.save(member);
-
-            MemberJoinDTO memberJoinDTO = MemberJoinDTO.builder()
-                .mid(member.getMid())
-                .name(member.getName())
-                .build();
-            String accessToken = tokenService.createAccessToken(memberJoinDTO);
-            String refreshToken = tokenService.createRefreshToken(memberJoinDTO);
-
-            //회원가입에 성공한 회원의 토큰 리턴
-            return MemberLoginResponseDTO.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken).build();
         }else{
             //email이 존재하는 경우
-            Member member = result.get();
+            member = result.get();
+        }
 
-            if (social.equals(member.getSocial())){
-                MemberJoinDTO memberJoinDTO = MemberJoinDTO.builder()
-                    .mid(member.getMid())
-                    .name(member.getName())
-                    .build();
-                String accessToken = tokenService.createAccessToken(memberJoinDTO);
-                String refreshToken = tokenService.createRefreshToken(memberJoinDTO);
+        if (social.equals(member.getSocial())){
 
-                //회원가입에 성공한 회원의 토큰 리턴
-                return MemberLoginResponseDTO.builder()
-                    .accessToken(accessToken)
-                    .refreshToken(refreshToken).build();
-            }else{
-                throw new RuntimeException(result.get().getSocial() + "으로 로그인 하셨습니다.");
-            }
+            //회원가입에 성공한 회원 정보 리턴
+            return MemberResponseDTO.builder()
+                .mid(member.getMid())
+                .name(member.getName())
+                .email(member.getEmail())
+                .address(member.getAddress())
+                .del(member.isDel())
+                .social(member.getSocial())
+                .build();
+        }else{
+            throw new RuntimeException(result.get().getSocial() + "으로 로그인 하셨습니다.");
         }
     }
 
     //로그인 성공했을 때 호출되는 메서드
     //이메일을 가진 사용자를 찾아보고 존재하지 않다면 자동으로 회원가입 시키는 메서드 반환 generateDTO
-    public MemberLoginResponseDTO memberLoginOrJoin(String platform, String accessToken) throws Exception {
+    public MemberResponseDTO memberLoginOrJoin(String platform, String accessToken) throws Exception {
 
         // 유저 정보 요청
         //전송할 header 작성, access_token전송
@@ -159,7 +146,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 userInfo = configUtils.getKakaoUserInfoUri();
                 break;
             case "google":
-                userInfo = configUtils.getGoogleAccessTokenUrl();
+                userInfo = configUtils.getGoogleUserInfoRequestURL();
                 break;
             case "naver":
                 userInfo = configUtils.getNaverClientId();
@@ -169,12 +156,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // Make the HTTP request using RestTemplate
         ResponseEntity<Map<String, Object>> response = restTemplate.exchange(Objects.requireNonNull(userInfo), HttpMethod.POST, requestEntity, responseType);
 
-        if (response.getStatusCode() == HttpStatus.OK) {
-            log.info(response.getBody());
-        }else{
+        if (response.getStatusCode() != HttpStatus.OK) {
             Thread.sleep(5000);
             response = restTemplate.exchange(userInfo, HttpMethod.POST, requestEntity, responseType);
-            log.info(response.getBody());
         }
 
         String email = null;
@@ -199,5 +183,25 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         return generateDTO(email, name, platform.toUpperCase(), mobile);
+    }
+
+    public MemberLoginResponseDTO updateMemberAndToken(MemberJoinDTO memberJoinDTO){
+
+        Member member = memberRepository.findByMid(memberJoinDTO.getMid());
+
+        member.changeAddress(memberJoinDTO.getAddress());
+        member.changeName(memberJoinDTO.getName());
+        member.changePhone(memberJoinDTO.getPhone());
+
+        memberRepository.save(member);
+
+        String accessToken = tokenService.createAccessToken(memberJoinDTO);
+        String refreshToken = tokenService.createRefreshToken(memberJoinDTO);
+
+        tokenService.saveToken(accessToken, refreshToken);
+
+        return MemberLoginResponseDTO.builder()
+            .accessToken(accessToken)
+            .refreshToken(refreshToken).build();
     }
 }

@@ -43,9 +43,9 @@ public class ConfigUtils {
     @Value("${google.redirect-uri}")
     private String googleRedirectUri;
 
-    private final String googleAccessTokenUrl = "https://oauth2.googleapis.com/token";
+    private final String googleAccessTokenUrl = "https://accounts.google.com/o/oauth2/token";
 
-    private final String googleUserInfoRequestURL = "https://oauth2.googleapis.com/token";
+    private final String googleUserInfoRequestURL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
     //카카오 로그인 성공 후 넘어오는 데이터를 이용해서 email과 name을 추출해서 리턴하는 메서드
     public String[] getKakaoEmailAndName(Map<String, Object> paramMap){

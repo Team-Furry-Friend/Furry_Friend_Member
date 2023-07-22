@@ -53,6 +53,17 @@ public class Member extends BaseEntity {
         this.mpw = mpw;
     }
 
+    public void changeName(String name){
+        this.name = name;
+    }
+
+    public void changeAddress(String address){
+        this.address = address;
+    }
+    public void changePhone(String phone){
+        this.phone = phone;
+    }
+
     //권한 추가
     public void addRole(MemberRole memberRole){
         this.roleSet.add(memberRole);
