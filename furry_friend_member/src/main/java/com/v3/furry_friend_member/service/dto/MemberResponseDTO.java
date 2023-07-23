@@ -18,4 +18,6 @@ public class MemberResponseDTO {
     private String phone;
     private String social;
     private boolean del;
+    private String accessToken;
+    private String refreshToken;
 }

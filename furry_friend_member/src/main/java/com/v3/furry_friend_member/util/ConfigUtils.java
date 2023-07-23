@@ -28,11 +28,16 @@ public class ConfigUtils {
     @Value("${naver.client-id}")
     private String naverClientId;
 
+    @Value("${naver.client-secret}")
+    private String naverClientSercret;
+
     @Value("${naver.redirect-uri}")
     private String naverRedirectUri;
 
     @Value("${naver.token-uri}")
     private String naverAccessTokenUrl;
+
+    private final String naverUserInfoUri = "https://openapi.naver.com/v1/nid/me";
 
     @Value("${google.client-id}")
     private String googleClientId;

@@ -68,6 +68,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             case "naver":
                 accessTokenUrl = configUtils.getNaverAccessTokenUrl();
                 requestBody.add("client_id", configUtils.getNaverClientId());
+                requestBody.add("client_secret", configUtils.getNaverClientSercret());
                 requestBody.add("redirect_uri", configUtils.getNaverRedirectUri());
                 break;
         }
@@ -110,6 +111,26 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }else{
             //email이 존재하는 경우
             member = result.get();
+
+            if(member.getSocial().equals(social)){
+
+                MemberJoinDTO memberJoinDTO = MemberJoinDTO.builder()
+                    .mid(member.getMid())
+                    .name(member.getName())
+                    .build();
+
+                String accessToken = tokenService.createAccessToken(memberJoinDTO);
+                String refreshToken = tokenService.createRefreshToken(memberJoinDTO);
+
+                tokenService.saveToken(accessToken, refreshToken);
+
+                return MemberResponseDTO.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+            }else{
+                throw new RuntimeException(result.get().getSocial() + "으로 로그인 하셨습니다.");
+            }
         }
 
         if (social.equals(member.getSocial())){
@@ -149,7 +170,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 userInfo = configUtils.getGoogleUserInfoRequestURL();
                 break;
             case "naver":
-                userInfo = configUtils.getNaverClientId();
+                userInfo = configUtils.getNaverUserInfoUri();
                 break;
         }
 
@@ -171,15 +192,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 name = li[1];
                 break;
             case "google":
-                email = (String)response.getBody().get("email");
+                email = (String) response.getBody().get("email");
                 break;
-            // case "naver":
-            //     paramMap = (Map<String, Object>)paramMap.get("response");
-            //     email = (String) paramMap.get("email");
-            //     name = (String) paramMap.get("name");
-            //     mobile = (String) paramMap.get("mobile");
-            //     log.info(paramMap);
-
+            case "naver":
+                Map<String, Object> responseBody = (Map<String, Object>) response.getBody().get("response");
+                email = (String) responseBody.get("email");
+                name = (String) responseBody.get("name");
+                mobile = (String) responseBody.get("mobile");
         }
 
         return generateDTO(email, name, platform.toUpperCase(), mobile);
@@ -188,6 +207,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public MemberLoginResponseDTO updateMemberAndToken(MemberJoinDTO memberJoinDTO){
 
         Member member = memberRepository.findByMid(memberJoinDTO.getMid());
+
 
         member.changeAddress(memberJoinDTO.getAddress());
         member.changeName(memberJoinDTO.getName());
