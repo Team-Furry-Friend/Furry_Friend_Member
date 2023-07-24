@@ -113,6 +113,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             member = result.get();
 
             if(member.getSocial().equals(social)){
+                if (member.getAddress() != null && member.getPhone() != null){
+                    return MemberResponseDTO.builder().mid(member.getMid()).build();
+                }
 
                 MemberJoinDTO memberJoinDTO = MemberJoinDTO.builder()
                     .mid(member.getMid())
