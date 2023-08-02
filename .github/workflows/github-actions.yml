@@ -23,6 +23,10 @@ jobs:
         with:
           token: ${{ env.GITHUB_TOKEN }}
           submodules: true
+
+      # Update submodules
+      - name: Update submodules
+        run: git submodule update --init --recursive
       
       - name: Set up JDK 11
         uses: actions/setup-java@v3
